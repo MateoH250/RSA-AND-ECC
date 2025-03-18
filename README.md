@@ -5,45 +5,158 @@ git add .
 git add archivo1.py archivo2.js
 git commit -m "Descripción de los cambios realizados"
 git push origin main
-
 import ipywidgets as widgets
 from IPython.display import display
+import ipywidgets as widgets
+from IPython.display import display
+import cryptography.hazmat.primitives.asymmetric.rsa as rsa
+import cryptography.hazmat.primitives.asymmetric.ec as ec
+import cryptography.hazmat.primitives.hashes as hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
+# Lista de clientes válidos
+clientes_validos = ['Cliente A', 'Cliente B', 'Cliente C', 'Cliente D', 'Cliente E']
+
+# Generar claves RSA
+private_key_rsa = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+public_key_rsa = private_key_rsa.public_key()
+
+# Generar claves ECC
+private_key_ecc = ec.generate_private_key(ec.SECP256R1())
+public_key_ecc = private_key_ecc.public_key()
+
+# Función para cifrar con RSA
+def cifrar_rsa(mensaje):
+    ciphertext = public_key_rsa.encrypt(
+        mensaje.encode(),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return ciphertext.hex()
+
+# Función para descifrar con RSA
+def descifrar_rsa(ciphertext):
+    plaintext = private_key_rsa.decrypt(
+        bytes.fromhex(ciphertext),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return plaintext.decode()
+
+# Función para cifrar con ECC
+def cifrar_ecc(mensaje):
+    shared_key = private_key_ecc.exchange(ec.ECDH(), public_key_ecc)
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(shared_key + mensaje.encode())
+    return digest.finalize().hex()
 
 # Función para verificar si el usuario es válido
 def verificar_usuario(b):
     nombre_usuario = nombre_texto.value.strip()
     
-    # Verificar si el nombre es válido
-    if nombre_usuario in ['Cliente A', 'Cliente B', 'Cliente C']:
+    if nombre_usuario in clientes_validos:
         mensaje_label.value = f"Bienvenido {nombre_usuario}!"
-        mostrar_botones()
+        mostrar_opciones()
     else:
-        mensaje_label.value = "Usuario no válido. Intenta con Cliente A, Cliente B o Cliente C."
+        mensaje_label.value = "Usuario no válido. Intenta con un cliente registrado."
+        ocultar_opciones()
 
-# Función para mostrar los botones después de la verificación
-def mostrar_botones():
-    boton_transaccion.layout.display = 'inline-block'
-    boton_saludar.layout.display = 'inline-block'
-    boton_preguntar.layout.display = 'inline-block'
-    boton_despedir.layout.display = 'inline-block'
+# Función para mostrar las opciones después de la verificación
+def mostrar_opciones():
+    opcion_mensaje.layout.display = 'inline-block'
+    opcion_documento.layout.display = 'inline-block'
+    opcion_transaccion.layout.display = 'inline-block'
 
-# Función para mostrar el saludo "Hola"
-def saludar(b):
-    mensaje_label.value = "¡Hola!"
+def ocultar_opciones():
+    opcion_mensaje.layout.display = 'none'
+    opcion_documento.layout.display = 'none'
+    opcion_transaccion.layout.display = 'none'
+    texto_input.layout.display = 'none'
+    destinatario_texto.layout.display = 'none'
+    monto_texto.layout.display = 'none'
+    opcion_rsa.layout.display = 'none'
+    opcion_ecc.layout.display = 'none'
+    mensaje_label.value = "Por favor ingresa tu nombre de usuario."
 
-# Función para preguntar "¿Cómo estás?"
-def preguntar_como_estas(b):
-    mensaje_label.value = "¿Cómo estás?"
+# Función para mostrar u ocultar las subopciones (Texto, Documento, Transacción)
+def toggle_subopciones(metodo):
+    if metodo == "Mensaje":
+        if texto_input.layout.display == 'inline-block':  # Si ya está visible, ocultarlo
+            texto_input.layout.display = 'none'
+            opcion_rsa.layout.display = 'none'
+            opcion_ecc.layout.display = 'none'
+        else:
+            texto_input.layout.display = 'inline-block'
+            opcion_rsa.layout.display = 'inline-block'
+            opcion_ecc.layout.display = 'inline-block'
+        # Ocultar las demás
+        destinatario_texto.layout.display = 'none'
+        monto_texto.layout.display = 'none'
+        boton_subir_documento.layout.display = 'none'
+    elif metodo == "Documento":
+        if boton_subir_documento.layout.display == 'inline-block':  # Si ya está visible, ocultarlo
+            boton_subir_documento.layout.display = 'none'
+            opcion_rsa.layout.display = 'none'
+            opcion_ecc.layout.display = 'none'
+        else:
+            boton_subir_documento.layout.display = 'inline-block'
+            opcion_rsa.layout.display = 'inline-block'
+            opcion_ecc.layout.display = 'inline-block'
+        # Ocultar las demás
+        texto_input.layout.display = 'none'
+        destinatario_texto.layout.display = 'none'
+        monto_texto.layout.display = 'none'
+    elif metodo == "Transacción":
+        if destinatario_texto.layout.display == 'inline-block':  # Si ya está visible, ocultarlo
+            destinatario_texto.layout.display = 'none'
+            monto_texto.layout.display = 'none'
+            opcion_rsa.layout.display = 'none'
+            opcion_ecc.layout.display = 'none'
+        else:
+            destinatario_texto.layout.display = 'inline-block'
+            monto_texto.layout.display = 'inline-block'
+            opcion_rsa.layout.display = 'inline-block'
+            opcion_ecc.layout.display = 'inline-block'
+        # Ocultar las demás
+        texto_input.layout.display = 'none'
+        boton_subir_documento.layout.display = 'none'
 
-# Función para decir "Adiós"
-def despedirse(b):
-    mensaje_label.value = "¡Adiós!"
+# Función para cifrar un mensaje con RSA o ECC
+def cifrar_mensaje(b, metodo):
+    mensaje = texto_input.value.strip()
+    if not mensaje:
+        mensaje_label.value = "Ingresa un mensaje válido para cifrar."
+        return
+    if metodo == "RSA":
+        mensaje_label.value = f"Mensaje Cifrado (RSA): {cifrar_rsa(mensaje)}"
+    elif metodo == "ECC":
+        mensaje_label.value = f"Mensaje Cifrado (ECC): {cifrar_ecc(mensaje)}"
 
-# Función para realizar la transacción
-def realizar_transaccion(b):
-    cliente = nombre_texto.value.strip()
-    transaccion = f"{cliente} envía $500 a Cliente B"
-    mensaje_label.value = transaccion
+# Función para cifrar una transacción con RSA o ECC
+def cifrar_transaccion(b, metodo):
+    destinatario = destinatario_texto.value.strip()
+    monto = monto_texto.value.strip()
+    if not destinatario or not monto:
+        mensaje_label.value = "Por favor ingresa el destinatario y el monto."
+        return
+    if metodo == "RSA":
+        mensaje_label.value = f"Transacción Cifrada (RSA): Destinatario: {destinatario}, Monto: {monto}"
+    elif metodo == "ECC":
+        mensaje_label.value = f"Transacción Cifrada (ECC): Destinatario: {destinatario}, Monto: {monto}"
+
+# Función para subir y cifrar un documento (simulado)
+def subir_documento(b, metodo):
+    # Aquí iría el código para manejar la carga de documentos
+    if metodo == "RSA":
+        mensaje_label.value = "Documento subido y cifrado (RSA)."
+    elif metodo == "ECC":
+        mensaje_label.value = "Documento subido y cifrado (ECC)."
 
 # Crear los widgets
 nombre_texto = widgets.Text(
@@ -53,23 +166,52 @@ nombre_texto = widgets.Text(
     disabled=False
 )
 
+texto_input = widgets.Text(
+    value='',
+    placeholder='Mensaje a cifrar',
+    description='Texto:',
+    disabled=False
+)
+
+destinatario_texto = widgets.Text(
+    value='',
+    placeholder='Ingresa destinatario',
+    description='Destinatario:',
+    disabled=False
+)
+
+monto_texto = widgets.Text(
+    value='',
+    placeholder='Ingresa monto',
+    description='Monto:',
+    disabled=False
+)
+
 boton_verificar = widgets.Button(description="Verificar Usuario")
 
-boton_saludar = widgets.Button(description="Hola", layout=widgets.Layout(display='none'))
-boton_preguntar = widgets.Button(description="¿Cómo estás?", layout=widgets.Layout(display='none'))
-boton_despedir = widgets.Button(description="Adiós", layout=widgets.Layout(display='none'))
+# Opciones de cifrado (Mensaje, Documento, Transacción)
+opcion_mensaje = widgets.Button(description="Cifrar Mensaje", layout=widgets.Layout(display='none'))
+opcion_documento = widgets.Button(description="Cifrar Documento", layout=widgets.Layout(display='none'))
+opcion_transaccion = widgets.Button(description="Cifrar Transacción", layout=widgets.Layout(display='none'))
 
-boton_transaccion = widgets.Button(description="Realizar Transacción", layout=widgets.Layout(display='none'))
+# Botones de cifrado con RSA o ECC
+opcion_rsa = widgets.Button(description="Cifrar con RSA", layout=widgets.Layout(display='none'))
+opcion_ecc = widgets.Button(description="Cifrar con ECC", layout=widgets.Layout(display='none'))
 
-# Crear la etiqueta para mostrar los mensajes
+# Botones para subir documento
+boton_subir_documento = widgets.Button(description="Subir Documento", layout=widgets.Layout(display='none'))
+
+# Etiqueta para mostrar mensajes
 mensaje_label = widgets.Label(value="Por favor ingresa tu nombre de usuario.")
 
-# Enlazar los botones con las funciones
+# Enlazar eventos
 boton_verificar.on_click(verificar_usuario)
-boton_saludar.on_click(saludar)
-boton_preguntar.on_click(preguntar_como_estas)
-boton_despedir.on_click(despedirse)
-boton_transaccion.on_click(realizar_transaccion)
+opcion_mensaje.on_click(lambda b: toggle_subopciones("Mensaje"))
+opcion_documento.on_click(lambda b: toggle_subopciones("Documento"))
+opcion_transaccion.on_click(lambda b: toggle_subopciones("Transacción"))
+opcion_rsa.on_click(lambda b: cifrar_mensaje(b, "RSA"))
+opcion_ecc.on_click(lambda b: cifrar_mensaje(b, "ECC"))
+boton_subir_documento.on_click(lambda b: subir_documento(b, "RSA"))
 
-# Mostrar los widgets
-display(nombre_texto, boton_verificar, mensaje_label, boton_saludar, boton_preguntar, boton_despedir, boton_transaccion)
+# Mostrar widgets
+display(nombre_texto, boton_verificar, mensaje_label, opcion_mensaje, opcion_documento, opcion_transaccion, opcion_rsa, opcion_ecc, texto_input, destinatario_texto, monto_texto, boton_subir_documento)
