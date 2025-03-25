@@ -64,7 +64,7 @@ def encriptar_monto_sha3_512(monto):
 
 # Simulación de cifrado cuántico (aleatorio)
 def cifrado_cuantico(mensaje):
-    """Simula un cifrado cuántico utilizando cambios aleatorios."""
+    """Simula un cifrado cuántico utilizando cambios aleatorios (como lo hacía anteriormente)."""
     # Convertir el mensaje en una lista de caracteres
     mensaje_lista = list(mensaje)
     # Realizar un "cambio cuántico" al mezclar aleatoriamente los caracteres
@@ -77,10 +77,10 @@ def verificar_usuario(b):
     
     if nombre_usuario in clientes_validos:
         mensaje_label.value = f"Bienvenido {nombre_usuario}!"
-        mostrar_opciones()
+        mostrar_opciones()  # Mostrar las opciones
     else:
         mensaje_label.value = "Usuario no válido. Intenta con un cliente registrado."
-        ocultar_opciones()
+        ocultar_opciones()  # Ocultar las opciones
 
 # Función para mostrar las opciones después de la verificación
 def mostrar_opciones():
@@ -88,6 +88,7 @@ def mostrar_opciones():
     opcion_documento.layout.display = 'inline-block'
     opcion_transaccion.layout.display = 'inline-block'
 
+# Función para ocultar las opciones
 def ocultar_opciones():
     opcion_mensaje.layout.display = 'none'
     opcion_documento.layout.display = 'none'
@@ -167,9 +168,12 @@ def cifrar_mensaje(b, metodo):
 def cifrar_transaccion(b, metodo):
     destinatario = destinatario_texto.value.strip()
     monto = monto_texto.value.strip()
+    
+    # Validación de entrada de destinatario y monto
     if not destinatario or not monto:
         mensaje_label.value = "Por favor ingresa el destinatario y el monto."
         return
+    
     # Cifrado de monto con SHA3-512
     monto_encriptado = encriptar_monto_sha3_512(monto)
     
@@ -237,5 +241,10 @@ opcion_ecc.on_click(lambda b: cifrar_mensaje(b, "ECC"))
 opcion_cuantico.on_click(lambda b: cifrar_mensaje(b, "Cuantico"))
 boton_subir_documento.on_click(lambda b: subir_documento(b, "RSA"))
 
+# Enlazar el cifrado de transacciones
+opcion_rsa.on_click(lambda b: cifrar_transaccion(b, "RSA"))
+opcion_ecc.on_click(lambda b: cifrar_transaccion(b, "ECC"))
+opcion_cuantico.on_click(lambda b: cifrar_transaccion(b, "Cuantico"))
+
 # Mostrar widgets
-display(nombre_texto, boton_verificar, mensaje_label, opcion_mensaje, opcion_documento, opcion_transaccion, opcion_rsa, opcion_ecc, opcion_cuantico, texto_input, destinatario_texto, monto_texto, boton_subir_documento)
+display(nombre_texto, boton_verificar, mensaje_label, opcion_mensaje, opcion_documento, opcion_transaccion, texto_input, destinatario_texto, monto_texto, boton_subir_documento, opcion_rsa, opcion_ecc, opcion_cuantico)
